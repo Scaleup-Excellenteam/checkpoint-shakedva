@@ -2,26 +2,23 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_LEN 50
+
+#define MAX_NAME_LEN 20
 #define MAX_TEL 10
 #define MAX_CLASSES 10
 #define MAX_COURSES 10
+#define MAX_CLASS_LEN 10
 #define MAX_LEVELS 12
 #define MAX_INPUT_LINE 100
 
 //TODO change file path
 const char* FILE_PATH = "/home/shakedva/Desktop/bootcamp/checkpoint/school/students.txt";
-
-//struct Course
-//{
-//    char name[MAX_LEN];
-//    int grade;
-//    struct Course* next;
-//};
+const int NUM_OF_DATA = 15;
 
 struct Student
 {
-    char name[MAX_LEN];
+    char firstName[MAX_NAME_LEN];
+    char lastName[MAX_NAME_LEN];
     char tel[MAX_TEL];
     int grades[MAX_COURSES];
     struct Student* next;
@@ -45,52 +42,54 @@ FILE* openFile(const char* fileName)
     return input_file;
 }
 
-int parseLine(char* line, struct Student* student) {
-    char firstName[MAX_LEN], lastName[MAX_LEN];
-    char tel[11];
-    char level[20];
-    char class[10];
-    int grades[10];
+int parseLine(char* line) {
+    char firstName[MAX_NAME_LEN], lastName[MAX_NAME_LEN];
+    char tel[MAX_TEL];
+    char levelStr[MAX_CLASS_LEN];
+    char classStr[MAX_CLASS_LEN];
+    int grades[MAX_COURSES];
 
-    int numRead = sscanf(line, "%s %s %s %s %s", firstName, lastName, tel, level, class);
-    if (numRead != 5) {
+    int numRead = sscanf(line, "%s %s %s %s %s %d %d %d %d %d %d %d %d %d %d",
+                         firstName, lastName, tel, levelStr, classStr, &grades[0], &grades[1], &grades[2], &grades[3], &grades[4],
+                         &grades[5], &grades[6], &grades[7], &grades[8], &grades[9]);
+    if (numRead != NUM_OF_DATA) {
         return 0; // Unable to read the first four fields
     }
-    ///strcat(strcat(firstName, " "), lastName);
-    printf("%s / %s / %s / %s / %s\n", firstName, lastName, tel, level, class);
 
-    for (int i = 0; i < 10; ++i) {
+    char *ptr;
+    long level, class;
+    level = strtol(levelStr, &ptr, 10);
+    class = strtol(classStr, &ptr, 10);
 
-        char delim[] = " ";
-        char *ptr = strtok(line + strlen(firstName) + strlen(lastName) + strlen(tel) + strlen(level) + strlen(class), delim);
+    printf("%s / %s / %s / %ld / %ld / %d %d %d %d %d %d %d %d %d %d\n", firstName, lastName, tel, level, class,
+           grades[0], grades[1], grades[2], grades[3], grades[4],
+           grades[5], grades[6], grades[7], grades[8], grades[9]);
 
-        while(ptr != NULL)
-        {
-            printf("'%s'\n", ptr);
-            ptr = strtok(NULL, delim);
-        }
-
-//        if (sscanf(line + strlen(firstName) + strlen(lastName) + strlen(tel) + strlen(level) + strlen(class),
-//                   "%d", &grades[i]) != 1) {
-//            return 0; // Unable to read the grades
-//        }
+    struct Student* student = (struct Student*) malloc(sizeof(struct Student)); 
+    if(student == NULL)
+    {
+        printf("malloc failed\n");
+        return -1;
     }
-//    for (int i = 0; i < 10; ++i)
-//        printf("%d", grades[i]);
-    printf("\n");
-//    strcpy(student->name, strcat(firstName, lastName));
-//    strcpy(student->tel, tel);
+    strcpy(student->firstName, firstName );
+    strcpy(student->lastName, lastName );
+    strcpy(student->tel, tel);
+    for (int i = 0; i < MAX_COURSES; i++)
+        student->grades[i] = grades[i];
+
+    student->next = school.DB[level][class];
+    school.DB[level][class] = student;
     return 1;
 }
 
 void readFile(FILE *file)
 {
     char line[MAX_INPUT_LINE];
-    struct Student student;
     while (fgets(line, sizeof(line), file)) {
-        parseLine(line, &student);
+        parseLine(line);
     }
     puts("\n---------------------------");
+
 }
 
 void init()

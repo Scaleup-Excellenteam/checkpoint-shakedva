@@ -165,14 +165,6 @@ void menu()
     }
 }
 int main() {
-    #include <unistd.h>
-    char cwd[5000];
-    if (getcwd(cwd, sizeof(cwd)) != NULL) {
-        printf("Current working dir: %s\n", cwd);
-    } else {
-        perror("getcwd() error");
-        return 1;
-    }
     init();
     menu();
     handleClosing();

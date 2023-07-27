@@ -18,6 +18,8 @@ const char *MENU_MSG = "Please choose an option:\n1. Insert a new student\n2. Re
                        "4. Search a student by first and last name\n5. The 10 excellent students in a course by a level\n6. Students leaving\n"
                        "7. Calculating an average for a course by a level\n8. Export the database into a file\n"
                        "9. Print all students\n"; //TODO remove option 9
+const char *INSERT_STUDENT_MSG = "Please enter the the following information separated by spaces\nFirst and last name, "
+                                 "telephone number, level, class and their 10 course's grades\n";
 const int NUM_OF_DATA = 15;
 const int DECIMAL = 10;
 
@@ -100,8 +102,7 @@ int parseLine(char *line) {
         printf("malloc failed\n");
         return -1;
     }
-//    strcpy(student->firstName, firstName);
-//    strcpy(student->lastName, lastName);
+
     strncpy(student->firstName, firstName, sizeof(student->firstName));
     strncpy(student->lastName, lastName, sizeof(student->lastName));
     strncpy(student->tel, tel, sizeof(student->tel));
@@ -153,6 +154,19 @@ void handleClosing()
     fclose(outputFile);
     freeSchool();
 }
+void clearInputBuffer() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF)
+        ;
+}
+void insertNewStudent()
+{
+    char line[MAX_INPUT_LINE];
+    printf("%s", INSERT_STUDENT_MSG);
+    clearInputBuffer();
+    if (fgets(line, sizeof(line), stdin) != NULL)
+        parseLine(line);
+}
 void menu()
 {
     char option[MAX_NAME_LEN];
@@ -161,9 +175,11 @@ void menu()
     switch (strtol(option, NULL, DECIMAL))
     {
         case 1:
+            insertNewStudent();
             break;
     }
 }
+
 int main() {
     init();
     menu();

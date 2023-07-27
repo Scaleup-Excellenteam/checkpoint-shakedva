@@ -177,9 +177,10 @@ void insertNewStudent()
 
 void deleteStudent()
 {
-    char firstName[MAX_NAME_LEN], lastName[MAX_NAME_LEN];
+    char firstName[MAX_NAME_LEN];
+    char lastName[MAX_NAME_LEN];
     printf("%s", DELETE_STUDENT_MSG);
-    scanf("%s %s", firstName, lastName);
+    scanf("%s %s", firstName, lastName); //TODO validation
     printf("\nreceived: <%s> <%s>", firstName, lastName);
     for (int level = 0; level < MAX_LEVELS; level++) {
         for (int class = 0; class < MAX_CLASSES; class++) {
@@ -228,6 +229,7 @@ void menu() {
     size_t numOfStudents = 100;
     do {
 //        clrscr();
+//        system("clear");
         printf("\n|School Manager<::>Home|\n");
         printf("--------------------------------------------------------------------------------\n");
         printf("Welcome to ( %s ) School!\nYou have inserted ( %zu ) students.\n\n", "Rabin", numOfStudents);// school->name, school->num_of_students);
@@ -241,7 +243,7 @@ void menu() {
         printf("\t[7] |--> Export\n");
         printf("\t[8] |--> Help\n");
         printf("\t[9] |--> Exit\n");
-        printf("\n\tPlease Enter Your Choice (1-10): ");
+        printf("\n\tPlease Enter Your Choice (0-9): ");
         input = getc(stdin);
         fflush(stdin);
         getc(stdin);
@@ -251,6 +253,7 @@ void menu() {
                 break;
             case Delete:
                 deleteStudent();
+                getc(stdin); // read the new line after student's name
                 break;
             case Edit:
                 printf("Edit Not supported yet.\n");

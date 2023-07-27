@@ -1,6 +1,7 @@
 .idea/
 cmake-build-debug/
-students.txt
+resources/students.txt
 students_with_class.txt
 main
 studentsDB.txt
+build/

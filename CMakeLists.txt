@@ -4,3 +4,5 @@ project(school C)
 set(CMAKE_C_STANDARD 11)
 
 add_executable(school main.c)
+
+add_subdirectory (resources)

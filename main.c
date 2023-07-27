@@ -12,9 +12,14 @@
 #define MAX_INPUT_LINE 100
 
 //TODO change file path
-const char *INPUT_FILE_PATH = "/home/shakedva/Desktop/bootcamp/checkpoint/school/students.txt";
-const char *OUTPUT_FILE_PATH = "/home/shakedva/Desktop/bootcamp/checkpoint/school/studentsDB.txt";
+const char *INPUT_FILE_PATH = "resources/students.txt";
+const char *DB_FILE_PATH = "resources/studentsDB.txt";
+const char *MENU_MSG = "Please choose an option:\n1. Insert a new student\n2. Remove a student\n3. Edit a student\n"
+                       "4. Search a student by first and last name\n5. The 10 excellent students in a course by a level\n6. Students leaving\n"
+                       "7. Calculating an average for a course by a level\n8. Export the database into a file\n"
+                       "9. Print all students\n"; //TODO remove option 9
 const int NUM_OF_DATA = 15;
+const int DECIMAL = 10;
 
 struct Student {
     char firstName[MAX_NAME_LEN];
@@ -82,10 +87,9 @@ int parseLine(char *line) {
         return 0; // Unable to read all the fields
     }
 
-    char *ptr;
     long level, class;
-    level = strtol(levelStr, &ptr, 10);
-    class = strtol(classStr, &ptr, 10);
+    level = strtol(levelStr, NULL, DECIMAL);
+    class = strtol(classStr, NULL, DECIMAL);
 
     printf("%s / %s / %s / %ld / %ld / %d %d %d %d %d %d %d %d %d %d\n", firstName, lastName, tel, level, class,
            grades[0], grades[1], grades[2], grades[3], grades[4],
@@ -96,9 +100,11 @@ int parseLine(char *line) {
         printf("malloc failed\n");
         return -1;
     }
-    strcpy(student->firstName, firstName);
-    strcpy(student->lastName, lastName);
-    strcpy(student->tel, tel);
+//    strcpy(student->firstName, firstName);
+//    strcpy(student->lastName, lastName);
+    strncpy(student->firstName, firstName, sizeof(student->firstName));
+    strncpy(student->lastName, lastName, sizeof(student->lastName));
+    strncpy(student->tel, tel, sizeof(student->tel));
     for (int i = 0; i < MAX_COURSES; i++)
         student->grades[i] = grades[i];
 
@@ -142,14 +148,33 @@ void init() {
 
 void handleClosing()
 {
-    FILE *outputFile = openOutputFile(OUTPUT_FILE_PATH);
+    FILE *outputFile = openOutputFile(DB_FILE_PATH);
     loadDatabaseToFile(outputFile);
     fclose(outputFile);
     freeSchool();
 }
-
+void menu()
+{
+    char option[MAX_NAME_LEN];
+    printf("%s", MENU_MSG);
+    scanf("%s", option);
+    switch (strtol(option, NULL, DECIMAL))
+    {
+        case 1:
+            break;
+    }
+}
 int main() {
+    #include <unistd.h>
+    char cwd[5000];
+    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+        printf("Current working dir: %s\n", cwd);
+    } else {
+        perror("getcwd() error");
+        return 1;
+    }
     init();
+    menu();
     handleClosing();
     return 0;
 }

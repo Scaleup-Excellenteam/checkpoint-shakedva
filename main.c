@@ -12,7 +12,8 @@
 #define MAX_INPUT_LINE 100
 
 //TODO change file path
-const char *FILE_PATH = "/home/shakedva/Desktop/bootcamp/checkpoint/school/students.txt";
+const char *INPUT_FILE_PATH = "/home/shakedva/Desktop/bootcamp/checkpoint/school/students.txt";
+const char *OUTPUT_FILE_PATH = "/home/shakedva/Desktop/bootcamp/checkpoint/school/studentsDB.txt";
 const int NUM_OF_DATA = 15;
 
 struct Student {
@@ -28,14 +29,42 @@ struct School {
 
 static struct School school;
 
-FILE *openFile(const char *fileName) {
-    FILE *input_file;
-    input_file = fopen(fileName, "r");
-    if (input_file == 0) {
-        perror("Can not open input file\n");
-        exit(-1);
+FILE *openOutputFile(const char *fileName) {
+    FILE *outputFile;
+    outputFile = fopen(fileName, "w");
+    if(outputFile == NULL)
+    {
+        perror("Can not open file to save the database\n");
+        exit(1);
     }
-    return input_file;
+    return outputFile;
+}
+FILE *openInputFile(const char *fileName) {
+    FILE *inputFile;
+    inputFile = fopen(fileName, "r");
+    if (inputFile == NULL) {
+        perror("Can not open input file\n");
+        exit(1);
+    }
+    return inputFile;
+}
+
+void loadDatabaseToFile(FILE *outputFile)
+{
+    for (int level = 0; level < MAX_LEVELS; level++) {
+        for (int class = 0; class < MAX_CLASSES; class++) {
+            struct Student *student = school.DB[level][class];
+            while (student != NULL) {
+                fprintf(outputFile,"%s %s %s %d %d ",
+                        student->firstName, student->lastName, student->tel, level, class);
+                for(int gradeIndex = 0; gradeIndex < MAX_COURSES;  gradeIndex++)
+                    fprintf(outputFile, "%d ", student->grades[gradeIndex]);
+                fprintf(outputFile, "\n");
+
+                student = student->next;
+            }
+        }
+    }
 }
 
 int parseLine(char *line) {
@@ -50,7 +79,7 @@ int parseLine(char *line) {
                          &grades[4],
                          &grades[5], &grades[6], &grades[7], &grades[8], &grades[9]);
     if (numRead != NUM_OF_DATA) {
-        return 0; // Unable to read the first four fields
+        return 0; // Unable to read all the fields
     }
 
     char *ptr;
@@ -106,13 +135,21 @@ void freeSchool() {
 }
 
 void init() {
-    FILE *inputFile = openFile(FILE_PATH);
+    FILE *inputFile = openInputFile(INPUT_FILE_PATH);
     readFile(inputFile);
     fclose(inputFile);
 }
 
+void handleClosing()
+{
+    FILE *outputFile = openOutputFile(OUTPUT_FILE_PATH);
+    loadDatabaseToFile(outputFile);
+    fclose(outputFile);
+    freeSchool();
+}
+
 int main() {
     init();
-    freeSchool();
+    handleClosing();
     return 0;
 }

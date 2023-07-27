@@ -86,8 +86,8 @@ int parseLine(char *line) { //TODO add input validation
                &grades[4], &grades[5], &grades[6], &grades[7], &grades[8], &grades[9]) != NUM_OF_DATA) {
         return 0; // Unable to read all the fields
     }
-    level = strtol(levelStr, NULL, DECIMAL);
-    class = strtol(classStr, NULL, DECIMAL);
+    level = strtol(levelStr, NULL, DECIMAL) - 1;
+    class = strtol(classStr, NULL, DECIMAL) - 1;
 
     student = createStudent(firstName, lastName, tel, grades,school.DB[level][class]);
     if(student == NULL){
@@ -112,7 +112,7 @@ void loadDatabaseToFile(FILE *outputFile)
             struct Student *student = school.DB[level][class];
             while (student != NULL) {
                 fprintf(outputFile,"%s %s %s %d %d ",
-                        student->firstName, student->lastName, student->tel, level, class);
+                        student->firstName, student->lastName, student->tel, level+1, class+1);
                 for(int gradeIndex = 0; gradeIndex < MAX_COURSES;  gradeIndex++)
                     fprintf(outputFile, "%d ", student->grades[gradeIndex]);
                 fprintf(outputFile, "\n");
@@ -211,7 +211,7 @@ void printAllStudents() {
         for (int class = 0; class < MAX_CLASSES; class++) {
             struct Student *student = school.DB[level][class];
             while (student != NULL) {
-                printf("%s / %s / %s / %d / %d ", student->firstName,  student->lastName,  student->tel, level, class);
+                printf("%s / %s / %s / %d / %d ", student->firstName,  student->lastName,  student->tel, level+1, class+1);
                 for(int gradeIndex = 0; gradeIndex < MAX_COURSES;  gradeIndex++)
                     printf("%d ", student->grades[gradeIndex]);
                 printf("\n");

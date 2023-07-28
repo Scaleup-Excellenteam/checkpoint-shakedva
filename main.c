@@ -29,17 +29,21 @@ struct Student {
     int grades[MAX_COURSES];
     struct Student *next;
 };
-struct School {
-    struct Student *DB[MAX_LEVELS][MAX_CLASSES];
+struct StudentCourseNode {
+    struct Student *student;
+    struct StudentCourseNode *next;
 };
-
+struct School {
+    char *name;
+    struct Student *DB[MAX_LEVELS][MAX_CLASSES];
+    struct StudentCourseNode *courses[MAX_LEVELS][MAX_COURSES];
+};
 static struct School school;
 
 FILE *openOutputFile(const char *fileName) {
     FILE *outputFile;
     outputFile = fopen(fileName, "w");
-    if(outputFile == NULL)
-    {
+    if (outputFile == NULL) {
         perror("Can not open file to save the database\n");
         exit(1);
     }
@@ -56,8 +60,56 @@ FILE *openInputFile(const char *fileName) {
     return inputFile;
 }
 
-struct Student* createStudent(char* firstName, char* lastName, char*  tel, const int* grades, struct Student *next)
-{
+void printSchoolCourses() {
+    printf("SchoolCourses\n");
+    for (int level = 0; level < MAX_LEVELS; level++) {
+        printf("level: %d\n", level);
+        for (int courseNum = 0; courseNum < MAX_COURSES; courseNum++) {
+            struct Student *student = school.DB[level][courseNum];
+            while (student != NULL) {
+                printf("level: %d\n", courseNum);
+                printf("%s %s --> ", student->firstName, student->lastName);
+                student = student->next;
+            }
+            printf("--|\n");
+        }
+    }
+}
+
+void addStudentToCourses(struct Student *student, int level) {
+    for (int courseNum = 0; courseNum < MAX_COURSES; courseNum++) {
+        struct StudentCourseNode* studentCourseNode = (struct StudentCourseNode *) malloc
+        struct StudentCourseNode *curr = school.courses[level][courseNum];
+        struct StudentCourseNode *prev = NULL;
+        if (curr == NULL) { //empty list
+            school.courses[level][courseNum] = student;
+            continue; // to the next course
+        }
+        while (curr != NULL && student->grades[courseNum] <= curr->student->grades[courseNum]) {
+            prev = curr;
+            curr = curr->next;
+        }
+        if (curr == NULL) // reached the end
+        {
+            prev->next = student;
+        } else // head or middle
+        {
+            if (prev == NULL) // head
+            {
+                student->next = curr;
+                school.courses[level][courseNum] = student;
+            } else //middle
+            {
+                prev->next = student;
+                student->next = curr;
+            }
+
+        }
+
+    }
+}
+
+struct Student *createStudent(char *firstName, char *lastName, char *tel, const int *grades, struct Student *next) {
     struct Student *student = (struct Student *) malloc(sizeof(struct Student));
     if (student == NULL) {
         return NULL;
@@ -80,7 +132,7 @@ int parseLine(char *line) { //TODO add input validation
     int grades[MAX_COURSES];
     long level;
     long class;
-    struct Student* student = NULL;
+    struct Student *student = NULL;
     if (sscanf(line, "%s %s %s %s %s %d %d %d %d %d %d %d %d %d %d",
                firstName, lastName, tel, levelStr, classStr, &grades[0], &grades[1], &grades[2], &grades[3],
                &grades[4], &grades[5], &grades[6], &grades[7], &grades[8], &grades[9]) != NUM_OF_DATA) {
@@ -89,12 +141,13 @@ int parseLine(char *line) { //TODO add input validation
     level = strtol(levelStr, NULL, DECIMAL) - 1;
     class = strtol(classStr, NULL, DECIMAL) - 1;
 
-    student = createStudent(firstName, lastName, tel, grades,school.DB[level][class]);
-    if(student == NULL){
+    student = createStudent(firstName, lastName, tel, grades, school.DB[level][class]);
+    if (student == NULL) {
         printf("malloc failed\n");
         return -1;
     }
     school.DB[level][class] = student;
+    addStudentToCourses(student, level);
     return 1;
 }
 
@@ -125,15 +178,14 @@ void freeSchool() {
     }
 }
 
-void loadDatabaseToFile(FILE *outputFile)
-{
+void loadDatabaseToFile(FILE *outputFile) {
     for (int level = 0; level < MAX_LEVELS; level++) {
         for (int class = 0; class < MAX_CLASSES; class++) {
             struct Student *student = school.DB[level][class];
             while (student != NULL) {
-                fprintf(outputFile,"%s %s %s %d %d ",
-                        student->firstName, student->lastName, student->tel, level+1, class+1);
-                for(int gradeIndex = 0; gradeIndex < MAX_COURSES;  gradeIndex++)
+                fprintf(outputFile, "%s %s %s %d %d ",
+                        student->firstName, student->lastName, student->tel, level + 1, class + 1);
+                for (int gradeIndex = 0; gradeIndex < MAX_COURSES; gradeIndex++)
                     fprintf(outputFile, "%d ", student->grades[gradeIndex]);
                 fprintf(outputFile, "\n");
 
@@ -143,15 +195,13 @@ void loadDatabaseToFile(FILE *outputFile)
     }
 }
 
-void exportDatabase()
-{
+void exportDatabase() {
     FILE *outputFile = openOutputFile(DB_FILE_PATH);
     loadDatabaseToFile(outputFile);
     fclose(outputFile);
 }
 
-void handleClosing()
-{
+void handleClosing() {
     exportDatabase();
     freeSchool();
 }
@@ -162,16 +212,14 @@ void init() {
     fclose(inputFile);
 }
 
-void insertNewStudent()
-{
+void insertNewStudent() {
     char line[MAX_INPUT_LINE];
     printf("%s", INSERT_STUDENT_MSG);
     if (fgets(line, sizeof(line), stdin) != NULL)
         parseLine(line);
 }
 
-void deleteStudent()
-{
+void deleteStudent() {
     char firstName[MAX_NAME_LEN];
     char lastName[MAX_NAME_LEN];
     printf("%s", GET_STUDENT_NAME_MSG);
@@ -198,12 +246,11 @@ void deleteStudent()
     }
 }
 
-void printStudent(struct Student* student, int level, int class)
-{
-    if(student==NULL)
+void printStudent(struct Student *student, int level, int class) {
+    if (student == NULL)
         return;
-    printf("%s %s %s %d %d ", student->firstName,  student->lastName,  student->tel, level+1, class+1);
-    for(int gradeIndex = 0; gradeIndex < MAX_COURSES;  gradeIndex++)
+    printf("%s %s %s %d %d ", student->firstName, student->lastName, student->tel, level + 1, class + 1);
+    for (int gradeIndex = 0; gradeIndex < MAX_COURSES; gradeIndex++)
         printf("%d ", student->grades[gradeIndex]);
     printf("\n");
 
@@ -221,8 +268,7 @@ void printAllStudents() {
     }
 }
 
-struct Student* getStudentByName(char* firstName, char* lastName)
-{
+struct Student *getStudentByName(char *firstName, char *lastName) {
     for (int level = 0; level < MAX_LEVELS; level++) {
         for (int class = 0; class < MAX_CLASSES; class++) {
             struct Student *student = school.DB[level][class];
@@ -237,19 +283,18 @@ struct Student* getStudentByName(char* firstName, char* lastName)
     }
     return NULL;
 }
-void searchStudent()
-{
+
+void searchStudent() {
     char firstName[MAX_NAME_LEN];
     char lastName[MAX_NAME_LEN];
     printf("%s", GET_STUDENT_NAME_MSG);
     scanf("%s %s", firstName, lastName); //TODO validation
     getc(stdin); // read the newline after student's name
-    struct Student* student = getStudentByName(firstName, lastName);
+    struct Student *student = getStudentByName(firstName, lastName);
     printStudent(student, 0, 0); // todo level&class
 }
 
-void editStudentGrade()
-{ //TODO validation
+void editStudentGrade() { //TODO validation
     char courseStr[MAX_NAME_LEN];
     char gradeStr[MAX_NAME_LEN];
     char firstName[MAX_NAME_LEN];
@@ -262,22 +307,35 @@ void editStudentGrade()
     long course = strtol(courseStr, NULL, DECIMAL) - 1;
     long grade = strtol(gradeStr, NULL, DECIMAL);
 
-    struct Student* student = getStudentByName(firstName, lastName);
+    struct Student *student = getStudentByName(firstName, lastName);
     student->grades[course] = grade;
 }
 
 
-enum menu_inputs { Insert = '0', Delete = '1', Edit = '2', Search = '3', Showall = '4', Sort = '5', Import= '6', Export = '7', Help = '8', Exit = '9' };
+enum menu_inputs {
+    Insert = '0',
+    Delete = '1',
+    Edit = '2',
+    Search = '3',
+    Showall = '4',
+    Sort = '5',
+    Import = '6',
+    Export = '7',
+    Help = '8',
+    Exit = '9'
+};
 
 void menu() {
     char input;
     size_t numOfStudents = 100;
+    school.name = "Rabin";
     do {
 //        clrscr();
 //        system("clear");
         printf("\n|School Manager<::>Home|\n");
         printf("--------------------------------------------------------------------------------\n");
-        printf("Welcome to ( %s ) School!\nYou have inserted ( %zu ) students.\n\n", "Rabin", numOfStudents);// school->name, school->num_of_students);
+        printf("Welcome to ( %s ) School!\nYou have inserted ( %zu ) students.\n\n", school.name,
+               numOfStudents);// school->name, school->num_of_students);
         printf("\t[0] |--> Insert\n");
         printf("\t[1] |--> Delete\n");
         printf("\t[2] |--> Edit\n");
@@ -308,6 +366,7 @@ void menu() {
                 break;
             case Showall:
                 printAllStudents();
+//                printSchoolCourses();
                 break;
             case Sort:
                 printf("Sort Not supported yet.\n");
@@ -323,7 +382,8 @@ void menu() {
                 handleClosing();
                 break;
             default:
-                printf("\nThere is no item with symbol \"%c\".Please enter a number between 1-10!\nPress any key to continue...", input);
+                printf("\nThere is no item with symbol \"%c\".Please enter a number between 1-10!\nPress any key to continue...",
+                       input);
                 getc(stdin);
                 getc(stdin);
                 break;

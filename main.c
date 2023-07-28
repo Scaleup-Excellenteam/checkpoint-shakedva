@@ -60,16 +60,17 @@ FILE *openInputFile(const char *fileName) {
     return inputFile;
 }
 
-void printSchoolCourses() {
+void printSchoolCourses() { // todo delete
     printf("SchoolCourses\n");
     for (int level = 0; level < MAX_LEVELS; level++) {
         printf("level: %d\n", level);
         for (int courseNum = 0; courseNum < MAX_COURSES; courseNum++) {
-            struct Student *student = school.DB[level][courseNum];
-            while (student != NULL) {
-                printf("level: %d\n", courseNum);
-                printf("%s %s --> ", student->firstName, student->lastName);
-                student = student->next;
+            struct StudentCourseNode *studentCourseNode = school.courses[level][courseNum];
+            printf("course: %d\n", courseNum);
+            while (studentCourseNode != NULL) {
+                printf("[%s %s %d] --> ", studentCourseNode->student->firstName, studentCourseNode->student->lastName,
+                       studentCourseNode->student->grades[courseNum]);
+                studentCourseNode = studentCourseNode->next;
             }
             printf("--|\n");
         }
@@ -78,11 +79,13 @@ void printSchoolCourses() {
 
 void addStudentToCourses(struct Student *student, int level) {
     for (int courseNum = 0; courseNum < MAX_COURSES; courseNum++) {
-        struct StudentCourseNode* studentCourseNode = (struct StudentCourseNode *) malloc
+        struct StudentCourseNode* studentCourseNode = (struct StudentCourseNode *) malloc(sizeof(struct StudentCourseNode));
+        studentCourseNode->student = student;
+        studentCourseNode->next = NULL;
         struct StudentCourseNode *curr = school.courses[level][courseNum];
         struct StudentCourseNode *prev = NULL;
         if (curr == NULL) { //empty list
-            school.courses[level][courseNum] = student;
+            school.courses[level][courseNum] = studentCourseNode;
             continue; // to the next course
         }
         while (curr != NULL && student->grades[courseNum] <= curr->student->grades[courseNum]) {
@@ -91,19 +94,18 @@ void addStudentToCourses(struct Student *student, int level) {
         }
         if (curr == NULL) // reached the end
         {
-            prev->next = student;
+            prev->next = studentCourseNode;
         } else // head or middle
         {
             if (prev == NULL) // head
             {
-                student->next = curr;
-                school.courses[level][courseNum] = student;
+                studentCourseNode->next = curr;
+                school.courses[level][courseNum] = studentCourseNode;
             } else //middle
             {
-                prev->next = student;
-                student->next = curr;
+                prev->next = studentCourseNode;
+                studentCourseNode->next = curr;
             }
-
         }
 
     }
@@ -366,7 +368,7 @@ void menu() {
                 break;
             case Showall:
                 printAllStudents();
-//                printSchoolCourses();
+                printSchoolCourses();
                 break;
             case Sort:
                 printf("Sort Not supported yet.\n");

@@ -221,12 +221,8 @@ void printAllStudents() {
     }
 }
 
-struct Student* findStudent()
+struct Student* getStudentByName(char* firstName, char* lastName)
 {
-    char firstName[MAX_NAME_LEN];
-    char lastName[MAX_NAME_LEN];
-    printf("%s", GET_STUDENT_NAME_MSG);
-    scanf("%s %s", firstName, lastName); //TODO validation
     for (int level = 0; level < MAX_LEVELS; level++) {
         for (int class = 0; class < MAX_CLASSES; class++) {
             struct Student *student = school.DB[level][class];
@@ -240,6 +236,44 @@ struct Student* findStudent()
         }
     }
     return NULL;
+}
+void searchStudent()
+{
+    char firstName[MAX_NAME_LEN];
+    char lastName[MAX_NAME_LEN];
+    printf("%s", GET_STUDENT_NAME_MSG);
+    scanf("%s %s", firstName, lastName); //TODO validation
+    getc(stdin); // read the newline after student's name
+    struct Student* student = getStudentByName(firstName, lastName);
+    printStudent(student, 0, 0); // todo level&class
+}
+
+void editStudentGrade()
+{ //TODO validation
+    char courseStr[MAX_NAME_LEN];
+    char gradeStr[MAX_NAME_LEN];
+    char firstName[MAX_NAME_LEN];
+    char lastName[MAX_NAME_LEN];
+    printf("%s", GET_STUDENT_NAME_MSG);
+    scanf("%s %s", firstName, lastName);
+    printf("Please enter the course number and grade");
+    scanf("%s %s", courseStr, gradeStr);
+    long course = strtol(courseStr, NULL, DECIMAL) - 1;
+    long grade = strtol(gradeStr, NULL, DECIMAL);
+
+    for (int level = 0; level < MAX_LEVELS; level++) {
+        for (int class = 0; class < MAX_CLASSES; class++) {
+            struct Student *student = school.DB[level][class];
+            while (student != NULL) {
+                if (strcmp(student->firstName, firstName) == 0 &&
+                    strcmp(student->lastName, lastName) == 0) { // student found
+                    student->grades[course] = grade;
+                    return;
+                }
+                student = student->next;
+            }
+        }
+    }
 }
 
 
@@ -277,10 +311,11 @@ void menu() {
                 getc(stdin); // read the new line after student's name
                 break;
             case Edit:
-                printf("Edit Not supported yet.\n");
+                editStudentGrade();
+                getc(stdin);
                 break;
             case Search:
-                findStudent();
+                searchStudent();
                 break;
             case Showall:
                 printAllStudents();

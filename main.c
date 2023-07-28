@@ -256,24 +256,14 @@ void editStudentGrade()
     char lastName[MAX_NAME_LEN];
     printf("%s", GET_STUDENT_NAME_MSG);
     scanf("%s %s", firstName, lastName);
-    printf("Please enter the course number and grade");
+    printf("Please enter the course number and grade: ");
     scanf("%s %s", courseStr, gradeStr);
+    getc(stdin);
     long course = strtol(courseStr, NULL, DECIMAL) - 1;
     long grade = strtol(gradeStr, NULL, DECIMAL);
 
-    for (int level = 0; level < MAX_LEVELS; level++) {
-        for (int class = 0; class < MAX_CLASSES; class++) {
-            struct Student *student = school.DB[level][class];
-            while (student != NULL) {
-                if (strcmp(student->firstName, firstName) == 0 &&
-                    strcmp(student->lastName, lastName) == 0) { // student found
-                    student->grades[course] = grade;
-                    return;
-                }
-                student = student->next;
-            }
-        }
-    }
+    struct Student* student = getStudentByName(firstName, lastName);
+    student->grades[course] = grade;
 }
 
 
@@ -312,7 +302,6 @@ void menu() {
                 break;
             case Edit:
                 editStudentGrade();
-                getc(stdin);
                 break;
             case Search:
                 searchStudent();

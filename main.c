@@ -82,29 +82,30 @@ void addStudentToCourses(struct Student *student, int level) {
         struct StudentCourseNode* studentCourseNode = (struct StudentCourseNode *) malloc(sizeof(struct StudentCourseNode));
         studentCourseNode->student = student;
         studentCourseNode->next = NULL;
-        struct StudentCourseNode *curr = school.courses[level][courseNum];
+        struct StudentCourseNode *current = school.courses[level][courseNum];
         struct StudentCourseNode *prev = NULL;
-        if (curr == NULL) { //empty list
+        //TODO refactor
+        if (current == NULL) { //empty list
             school.courses[level][courseNum] = studentCourseNode;
             continue; // to the next course
         }
-        while (curr != NULL && student->grades[courseNum] <= curr->student->grades[courseNum]) {
-            prev = curr;
-            curr = curr->next;
+        while (current != NULL && student->grades[courseNum] <= current->student->grades[courseNum]) {
+            prev = current;
+            current = current->next;
         }
-        if (curr == NULL) // reached the end
+        if (current == NULL) // reached the end
         {
             prev->next = studentCourseNode;
         } else // head or middle
         {
             if (prev == NULL) // head
             {
-                studentCourseNode->next = curr;
+                studentCourseNode->next = current;
                 school.courses[level][courseNum] = studentCourseNode;
             } else //middle
             {
                 prev->next = studentCourseNode;
-                studentCourseNode->next = curr;
+                studentCourseNode->next = current;
             }
         }
 
@@ -206,6 +207,7 @@ void exportDatabase() {
 void handleClosing() {
     exportDatabase();
     freeSchool();
+    //TODO free school courses
 }
 
 void init() {
@@ -220,6 +222,29 @@ void insertNewStudent() {
     if (fgets(line, sizeof(line), stdin) != NULL)
         parseLine(line);
 }
+void deleteStudentCourseNode(struct Student* student, int level)
+{
+    for (int courseNum = 0; courseNum < MAX_COURSES; courseNum++) {
+        struct StudentCourseNode *current = school.courses[level][courseNum];
+        struct StudentCourseNode *prev = NULL;
+        while (current != NULL &&
+               strcmp(current->student->firstName, student->firstName) != 0 &&
+               strcmp(current->student->lastName, student->lastName) != 0
+        )
+        {
+            prev = current;
+            current = current->next;
+        }
+        if (prev == NULL){
+            // student is the first in the course's grades list
+            school.courses[level][courseNum] = current->next;
+        }
+        else{
+            prev->next = current->next;
+        }
+        free(current); // delete the student's course node
+    }
+}
 
 void deleteStudent() {
     char firstName[MAX_NAME_LEN];
@@ -233,6 +258,7 @@ void deleteStudent() {
             while (current != NULL) {
                 if (strcmp(current->firstName, firstName) == 0 &&
                     strcmp(current->lastName, lastName) == 0) { // student found
+                    deleteStudentCourseNode(current, level);
                     if (prev != NULL) {
                         prev->next = current->next;
                     } else { // the student is the first node

@@ -12,7 +12,6 @@
 #define MAX_INPUT_LINE 100
 #define TOP_N_STUDENTS 10
 
-//TODO change file path
 const char *INPUT_FILE_PATH = "resources/students.txt";
 const char *DB_FILE_PATH = "resources/studentsDB.txt";
 const char *INSERT_STUDENT_MSG = "Please enter the the following information separated by spaces\nFirst and last name, "
@@ -21,7 +20,6 @@ const char *GET_STUDENT_NAME_MSG = "Please enter the first and last name of the 
 
 const int NUM_OF_DATA = 15;
 const int DECIMAL = 10;
-
 
 struct Student {
     char firstName[MAX_NAME_LEN];
@@ -173,13 +171,33 @@ void freeClassStudents(struct Student *student) {
     }
 }
 
-void freeSchool() {
+void freeDB() {
     for (int level = 0; level < MAX_LEVELS; level++) {
         for (int class = 0; class < MAX_CLASSES; class++) {
             struct Student *student = school.DB[level][class];
             if (student != NULL) {
                 freeClassStudents(student);
                 school.DB[level][class] = NULL;
+            }
+        }
+    }
+
+}
+void freeCourseStudents(struct StudentCourseNode *studentCourseNode) {
+    while (studentCourseNode != NULL) {
+        struct StudentCourseNode *temp = studentCourseNode;
+        studentCourseNode = studentCourseNode->next;
+        free(temp);
+    }
+}
+void freeCourses() {
+    for (int level = 0; level < MAX_LEVELS; level++) {
+        for (int course = 0; course < MAX_COURSES; course++) {
+            struct StudentCourseNode* studentCourseNode = school.courses[level][course];
+            if(studentCourseNode != NULL)
+            {
+                freeCourseStudents(studentCourseNode);
+                school.courses[level][course] = NULL;
             }
         }
     }
@@ -210,8 +228,8 @@ void exportDatabase() {
 
 void handleClosing() {
     exportDatabase();
-    freeSchool();
-    //TODO free school courses
+    freeCourses();
+    freeDB();
 }
 
 void init() {
@@ -226,7 +244,6 @@ void insertNewStudent() {
     if (fgets(line, sizeof(line), stdin) != NULL)
         parseLine(line);
 }
-
 
 void deleteStudentCourse(struct Student *student, int level, int course) {
     struct StudentCourseNode *current = school.courses[level][course];
@@ -258,6 +275,7 @@ void deleteStudent() {
     char lastName[MAX_NAME_LEN];
     printf("%s", GET_STUDENT_NAME_MSG);
     scanf("%s %s", firstName, lastName); //TODO validation
+    getc(stdin); // read the new line after student's name
     for (int level = 0; level < MAX_LEVELS; level++) {
         for (int class = 0; class < MAX_CLASSES; class++) {
             struct Student *current = school.DB[level][class];
@@ -363,15 +381,14 @@ void printTopNStudentsPerCourse() {
     long course = strtol(courseStr, NULL, DECIMAL) - 1;
     for (int level = 0; level < MAX_LEVELS; level++) {
         struct StudentCourseNode *studentCourseNode = school.courses[level][course];
-        if(studentCourseNode == NULL)
+        if (studentCourseNode == NULL)
             continue;
-        printf("Level %d: \n", level+1);
-        for(int studentIndex = 0; studentIndex < TOP_N_STUDENTS; studentIndex++ )
-        {
-            if(studentCourseNode == NULL)
+        printf("Level %d: \n", level + 1);
+        for (int studentIndex = 0; studentIndex < TOP_N_STUDENTS; studentIndex++) {
+            if (studentCourseNode == NULL)
                 break;
             printf("%d. %d %s %s\n",
-                   studentIndex+1,
+                   studentIndex + 1,
                    studentCourseNode->student->grades[course],
                    studentCourseNode->student->firstName,
                    studentCourseNode->student->lastName);
@@ -424,7 +441,6 @@ void menu() {
                 break;
             case Delete:
                 deleteStudent();
-                getc(stdin); // read the new line after student's name
                 break;
             case Edit:
                 editStudentGrade();

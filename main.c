@@ -296,13 +296,15 @@ void printAllStudents() {
     }
 }
 
-struct Student *getStudentByName(char *firstName, char *lastName) {
+struct Student *getStudentByName(char *firstName, char *lastName, int* studentLevel, int* studentClass) {
     for (int level = 0; level < MAX_LEVELS; level++) {
         for (int class = 0; class < MAX_CLASSES; class++) {
             struct Student *student = school.DB[level][class];
             while (student != NULL) {
                 if (strcmp(student->firstName, firstName) == 0 &&
                     strcmp(student->lastName, lastName) == 0) { // student found
+                    *studentLevel = level;
+                    *studentClass = class;
                     return student;
                 }
                 student = student->next;
@@ -318,8 +320,15 @@ void searchStudent() {
     printf("%s", GET_STUDENT_NAME_MSG);
     scanf("%s %s", firstName, lastName); //TODO validation
     getc(stdin); // read the newline after student's name
-    struct Student *student = getStudentByName(firstName, lastName);
-    printStudent(student, 0, 0); // todo level&class
+    int level = -1;
+    int class = -1;
+    struct Student *student = getStudentByName(firstName, lastName, &level, &class);
+    printStudent(student, level, class);
+}
+
+void editStudentCourseGrade(char* firstName, char* lastName, int course, int grade, int level)
+{
+
 }
 
 void editStudentGrade() { //TODO validation
@@ -334,8 +343,9 @@ void editStudentGrade() { //TODO validation
     getc(stdin);
     long course = strtol(courseStr, NULL, DECIMAL) - 1;
     long grade = strtol(gradeStr, NULL, DECIMAL);
-
-    struct Student *student = getStudentByName(firstName, lastName);
+    int level = -1;
+    int class = -1;
+    struct Student *student = getStudentByName(firstName, lastName, &level, &class);
     student->grades[course] = grade;
 }
 

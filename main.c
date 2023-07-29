@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <openssl/conf.h>
+#include <openssl/evp.h>
+#include <openssl/err.h>
+
 
 
 #define MAX_NAME_LEN 20
@@ -9,7 +13,7 @@
 #define MAX_COURSES 10
 #define MAX_CLASS_LEN 10
 #define MAX_LEVELS 12
-#define MAX_INPUT_LINE 100
+#define MAX_INPUT_LINE 200
 #define TOP_N_STUDENTS 10
 #define MINIMUM_NUM_OF_FAILS 5
 #define COURSE_PASS_GRADE 55
@@ -41,6 +45,72 @@ struct School {
     struct StudentCourseNode *courses[MAX_LEVELS][MAX_COURSES];
 };
 static struct School school;
+
+/* A 256 bit key */
+unsigned char myKey[] = { 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37,
+                       0x38, 0x39, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35,
+                       0x36, 0x37, 0x38, 0x39, 0x30, 0x31, 0x32, 0x33,
+                       0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30, 0x31
+};
+
+/* A 128 bit IV */
+unsigned char myIv[] = { 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37,
+                      0x38, 0x39, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35
+};
+
+void handleErrors(void)
+{
+    ERR_print_errors_fp(stderr);
+    abort();
+}
+int encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key,
+            unsigned char *iv, unsigned char *ciphertext)
+{
+    EVP_CIPHER_CTX *ctx;
+    int len;
+    int ciphertext_len;
+    if(!(ctx = EVP_CIPHER_CTX_new())) {
+        handleErrors();
+    }
+    if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv)) {
+        handleErrors();
+    }
+    if(1 != EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext, plaintext_len)) {
+        handleErrors();
+    }
+    ciphertext_len = len;
+    if(1 != EVP_EncryptFinal_ex(ctx, ciphertext + len, &len)) {
+        handleErrors();
+    }
+    ciphertext_len += len;
+    EVP_CIPHER_CTX_free(ctx);
+    return ciphertext_len;
+}
+
+int decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char *key,
+            unsigned char *iv, unsigned char *plaintext)
+{
+    EVP_CIPHER_CTX *ctx;
+    int len;
+    int plaintext_len;
+    if(!(ctx = EVP_CIPHER_CTX_new()))
+        handleErrors();
+    if(1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv)) {
+        handleErrors();
+    }
+    if(1 != EVP_DecryptUpdate(ctx, plaintext, &len, ciphertext, ciphertext_len)) {
+        handleErrors();
+    }
+    plaintext_len = len;
+
+    if(1 != EVP_DecryptFinal_ex(ctx, plaintext + len, &len)) {
+        handleErrors();
+    }
+    plaintext_len += len;
+    EVP_CIPHER_CTX_free(ctx);
+    return plaintext_len;
+}
+
 
 FILE *openOutputFile(const char *fileName) {
     FILE *outputFile;
@@ -207,16 +277,31 @@ void freeCourses() {
     }
 }
 
-void loadDatabaseToFile(FILE *outputFile) {
+void exportDatabaseToFile(FILE *outputFile) {
+    unsigned char line[MAX_INPUT_LINE];
+    unsigned char encryptedLine[MAX_INPUT_LINE];
     for (int level = 0; level < MAX_LEVELS; level++) {
         for (int class = 0; class < MAX_CLASSES; class++) {
             struct Student *student = school.DB[level][class];
             while (student != NULL) {
-                fprintf(outputFile, "%s %s %s %d %d ",
-                        student->firstName, student->lastName, student->tel, level + 1, class + 1);
-                for (int gradeIndex = 0; gradeIndex < MAX_COURSES; gradeIndex++)
-                    fprintf(outputFile, "%d ", student->grades[gradeIndex]);
-                fprintf(outputFile, "\n");
+                sprintf((char *)line, "%s %s %s %d %d %d %d %d %d %d %d %d %d %d %d",
+                        student->firstName, student->lastName, student->tel, level + 1, class + 1,
+                        student->grades[0], student->grades[1], student->grades[2], student->grades[3],
+                        student->grades[4], student->grades[5], student->grades[6], student->grades[7],
+                        student->grades[8], student->grades[9]);
+                int encryptedLen = encrypt(line,  strlen ((char *)line) + 1, myKey, myIv, encryptedLine);
+//                fprintf(outputFile, "%s %s %s %d %d ",
+//                        student->firstName, student->lastName, student->tel, level + 1, class + 1);
+//                for (int gradeIndex = 0; gradeIndex < MAX_COURSES; gradeIndex++)
+//                    fprintf(outputFile, "%d ", student->grades[gradeIndex]);
+//                fprintf(outputFile, "\n");
+                printf("Original: %s\n", line);
+                printf("Encrypted: %s\n", encryptedLine);
+                unsigned char decryptedLine[MAX_INPUT_LINE];
+                decrypt(encryptedLine, encryptedLen, myKey, myIv, decryptedLine);
+
+                printf("Decrypted: %s\n", decryptedLine);
+                printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n" );
 
                 student = student->next;
             }
@@ -226,7 +311,7 @@ void loadDatabaseToFile(FILE *outputFile) {
 
 void exportDatabase() {
     FILE *outputFile = openOutputFile(DB_FILE_PATH);
-    loadDatabaseToFile(outputFile);
+    exportDatabaseToFile(outputFile);
     fclose(outputFile);
 }
 

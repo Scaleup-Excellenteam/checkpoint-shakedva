@@ -34,6 +34,7 @@ struct StudentCourseNode {
 };
 struct School {
     char *name;
+    size_t numOfStudents;
     struct Student *DB[MAX_LEVELS][MAX_CLASSES];
     struct StudentCourseNode *courses[MAX_LEVELS][MAX_COURSES];
 };
@@ -153,6 +154,7 @@ int parseLine(char *line) { //TODO add input validation
     }
     school.DB[level][class] = student;
     addStudentToAllCourses(student, level);
+    school.numOfStudents++;
     return 1;
 }
 
@@ -396,7 +398,31 @@ void printTopNStudentsPerCourse() {
         }
     }
 }
+void printAverage()
+{
+    for (int level = 0; level < MAX_LEVELS; level++) {
+        printf("Level %d: \n", level + 1);
+        for (int course = 0; course < MAX_COURSES; course++) {
+            struct StudentCourseNode *studentCourseNode = school.courses[level][course];
+            int sum = 0;
+            int numStudentLevel = 0;
+            while(studentCourseNode != NULL) {
+                numStudentLevel++;
+                sum += studentCourseNode->student->grades[course];
+                studentCourseNode = studentCourseNode->next;
+            }
+            if(numStudentLevel == 0)
+                printf("The course %d is empty for this level\n", course+1);
+            else
+                printf("Course %d: Average %d\n", course + 1, sum/numStudentLevel);
+        }
+    }
+}
 
+void printUnderperformedStudents()
+{
+
+}
 enum menu_inputs {
     Insert = '0',
     Delete = '1',
@@ -412,7 +438,7 @@ enum menu_inputs {
 
 void menu() {
     char input;
-    size_t numOfStudents = 100; //TODO
+//    size_t numOfStudents = 100; //TODO
     school.name = "Rabin";
     do {
 //        clrscr();
@@ -420,7 +446,7 @@ void menu() {
         printf("\n|School Manager<::>Home|\n");
         printf("--------------------------------------------------------------------------------\n");
         printf("Welcome to ( %s ) School!\nYou have inserted ( %zu ) students.\n\n", school.name,
-               numOfStudents);// school->name, school->num_of_students);
+               school.numOfStudents);
         printf("\t[0] |--> Insert\n");
         printf("\t[1] |--> Delete\n");
         printf("\t[2] |--> Edit\n");
@@ -458,7 +484,7 @@ void menu() {
             case UnderperformedStudents:
                 break;
             case Average:
-                printf("Average Not supported yet.\n");
+                printAverage();
                 break;
             case Export:
                 exportDatabase();

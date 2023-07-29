@@ -10,6 +10,7 @@
 #define MAX_CLASS_LEN 10
 #define MAX_LEVELS 12
 #define MAX_INPUT_LINE 100
+#define TOP_N_STUDENTS 10
 
 //TODO change file path
 const char *INPUT_FILE_PATH = "resources/students.txt";
@@ -354,22 +355,47 @@ void editStudentGrade() { //TODO validation
     }
 }
 
+void printTopNStudentsPerCourse() {
+    char courseStr[MAX_NAME_LEN];
+    printf("Please enter the course number: ");
+    scanf("%s", courseStr);
+    getc(stdin);
+    long course = strtol(courseStr, NULL, DECIMAL) - 1;
+    for (int level = 0; level < MAX_LEVELS; level++) {
+        struct StudentCourseNode *studentCourseNode = school.courses[level][course];
+        if(studentCourseNode == NULL)
+            continue;
+        printf("Level %d: \n", level+1);
+        for(int studentIndex = 0; studentIndex < TOP_N_STUDENTS; studentIndex++ )
+        {
+            if(studentCourseNode == NULL)
+                break;
+            printf("%d. %d %s %s\n",
+                   studentIndex+1,
+                   studentCourseNode->student->grades[course],
+                   studentCourseNode->student->firstName,
+                   studentCourseNode->student->lastName);
+            studentCourseNode = studentCourseNode->next;
+        }
+    }
+}
+
 enum menu_inputs {
     Insert = '0',
     Delete = '1',
     Edit = '2',
     Search = '3',
     Showall = '4',
-    Sort = '5',
-    Import = '6',
-    Export = '7',
-    Help = '8',
+    Top10 = '5',
+    UnderperformedStudents = '6',
+    Average = '7',
+    Export = '8',
     Exit = '9'
 };
 
 void menu() {
     char input;
-    size_t numOfStudents = 100;
+    size_t numOfStudents = 100; //TODO
     school.name = "Rabin";
     do {
 //        clrscr();
@@ -383,10 +409,10 @@ void menu() {
         printf("\t[2] |--> Edit\n");
         printf("\t[3] |--> Search\n");
         printf("\t[4] |--> Show All\n");
-        printf("\t[5] |--> Sort\n");
-        printf("\t[6] |--> Import\n");
-        printf("\t[7] |--> Export\n");
-        printf("\t[8] |--> Help\n");
+        printf("\t[5] |--> Top 10 students per course\n");
+        printf("\t[6] |--> Underperformed students\n");
+        printf("\t[7] |--> Average per course\n");
+        printf("\t[8] |--> Export\n");
         printf("\t[9] |--> Exit\n");
         printf("\n\tPlease Enter Your Choice (0-9): ");
         input = getc(stdin);
@@ -410,15 +436,16 @@ void menu() {
                 printAllStudents();
                 printSchoolCourses();
                 break;
-            case Sort:
-                printf("Sort Not supported yet.\n");
+            case Top10:
+                printTopNStudentsPerCourse();
+                break;
+            case UnderperformedStudents:
+                break;
+            case Average:
+                printf("Average Not supported yet.\n");
                 break;
             case Export:
                 exportDatabase();
-                break;
-            case Help:
-//                help();
-                printf("Not supported yet.\n");
                 break;
             case Exit:
                 handleClosing();

@@ -18,8 +18,9 @@
 #define MINIMUM_NUM_OF_FAILS 5
 #define COURSE_PASS_GRADE 55
 
-const char *INPUT_FILE_PATH = "resources/students.txt";
-const char *DB_FILE_PATH = "resources/studentsDB.txt";
+//const char *INPUT_FILE_PATH = "resources/students.txt";
+const char *INPUT_FILE_PATH = "resources/studentsDB.bin";
+const char *DB_FILE_PATH = "resources/studentsDB.bin";
 const char *INSERT_STUDENT_MSG = "Please enter the the following information separated by spaces\nFirst and last name, "
                                  "telephone number, level, class and their 10 course's grades\n";
 const char *GET_STUDENT_NAME_MSG = "Please enter the first and last name of the student\n";
@@ -114,7 +115,7 @@ int decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char *key,
 
 FILE *openOutputFile(const char *fileName) {
     FILE *outputFile;
-    outputFile = fopen(fileName, "w");
+    outputFile = fopen(fileName, "wb");
     if (outputFile == NULL) {
         perror("Can not open file to save the database\n");
         exit(1);
@@ -124,7 +125,8 @@ FILE *openOutputFile(const char *fileName) {
 
 FILE *openInputFile(const char *fileName) {
     FILE *inputFile;
-    inputFile = fopen(fileName, "r");
+    inputFile = fopen(fileName, "rb");
+//    inputFile = fopen(fileName, "r");
     if (inputFile == NULL) {
         perror("Can not open input file\n");
         exit(1);
@@ -231,9 +233,17 @@ int parseLine(char *line) { //TODO add input validation
 }
 
 void readFile(FILE *file) {
-    char line[MAX_INPUT_LINE];
-    while (fgets(line, sizeof(line), file)) {
-        parseLine(line);
+//    char line[MAX_INPUT_LINE];
+//    while (fgets(line, sizeof(line), file)) {
+//        parseLine(line);
+//    }
+    int encryptedLen;
+    unsigned char encryptedLine[MAX_INPUT_LINE];
+    unsigned char decryptedLine[MAX_INPUT_LINE];
+    while(fread(&encryptedLen, sizeof(encryptedLen), 1, file) > 0){
+        fread(encryptedLine, sizeof(encryptedLine[0]), encryptedLen, file);
+        decrypt(encryptedLine, encryptedLen, myKey, myIv, decryptedLine);
+        parseLine(decryptedLine);
     }
 }
 
@@ -289,20 +299,9 @@ void exportDatabaseToFile(FILE *outputFile) {
                         student->grades[0], student->grades[1], student->grades[2], student->grades[3],
                         student->grades[4], student->grades[5], student->grades[6], student->grades[7],
                         student->grades[8], student->grades[9]);
-                int encryptedLen = encrypt(line,  strlen ((char *)line) + 1, myKey, myIv, encryptedLine);
-//                fprintf(outputFile, "%s %s %s %d %d ",
-//                        student->firstName, student->lastName, student->tel, level + 1, class + 1);
-//                for (int gradeIndex = 0; gradeIndex < MAX_COURSES; gradeIndex++)
-//                    fprintf(outputFile, "%d ", student->grades[gradeIndex]);
-//                fprintf(outputFile, "\n");
-                printf("Original: %s\n", line);
-                printf("Encrypted: %s\n", encryptedLine);
-                unsigned char decryptedLine[MAX_INPUT_LINE];
-                decrypt(encryptedLine, encryptedLen, myKey, myIv, decryptedLine);
-
-                printf("Decrypted: %s\n", decryptedLine);
-                printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n" );
-
+                int encryptedLen = encrypt(line, strlen ((char *)line) + 1, myKey, myIv, encryptedLine);
+                fwrite(&encryptedLen, sizeof(encryptedLen),1, outputFile);
+                fwrite(encryptedLine, sizeof(encryptedLine[0]), encryptedLen, outputFile);
                 student = student->next;
             }
         }
@@ -316,7 +315,7 @@ void exportDatabase() {
 }
 
 void handleClosing() {
-    exportDatabase();
+//    exportDatabase();
     freeCourses();
     freeDB();
 }

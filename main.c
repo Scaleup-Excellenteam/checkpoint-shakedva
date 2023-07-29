@@ -11,6 +11,8 @@
 #define MAX_LEVELS 12
 #define MAX_INPUT_LINE 100
 #define TOP_N_STUDENTS 10
+#define MINIMUM_NUM_OF_FAILS 5
+#define COURSE_PASS_GRADE 55
 
 const char *INPUT_FILE_PATH = "resources/students.txt";
 const char *DB_FILE_PATH = "resources/studentsDB.txt";
@@ -421,7 +423,24 @@ void printAverage()
 
 void printUnderperformedStudents()
 {
+    for (int level = 0; level < MAX_LEVELS; level++) {
+        for (int class = 0; class < MAX_CLASSES; class++) {
+            struct Student* student = school.DB[level][class];
+            while(student != NULL) {
+                int sumFail = 0;
+                for(int course = 0; course < MAX_COURSES; course++)
+                {
+                    if(student->grades[course] < COURSE_PASS_GRADE)
+                        sumFail++;
+                }
+                if(sumFail >= MINIMUM_NUM_OF_FAILS)
+                    printf("Level %d Class %d: %s %s\n", level+1, class+1, student->firstName, student->lastName);
 
+                student = student->next;
+            }
+
+        }
+    }
 }
 enum menu_inputs {
     Insert = '0',
@@ -482,6 +501,7 @@ void menu() {
                 printTopNStudentsPerCourse();
                 break;
             case UnderperformedStudents:
+                printUnderperformedStudents();
                 break;
             case Average:
                 printAverage();

@@ -18,7 +18,6 @@
 #define MINIMUM_NUM_OF_FAILS 5
 #define COURSE_PASS_GRADE 55
 
-//const char *INPUT_FILE_PATH = "resources/students.txt";
 const char *INPUT_FILE_PATH = "resources/studentsDB.bin";
 const char *DB_FILE_PATH = "resources/studentsDB.bin";
 const char *INSERT_STUDENT_MSG = "Please enter the the following information separated by spaces\nFirst and last name, "
@@ -126,29 +125,11 @@ FILE *openOutputFile(const char *fileName) {
 FILE *openInputFile(const char *fileName) {
     FILE *inputFile;
     inputFile = fopen(fileName, "rb");
-//    inputFile = fopen(fileName, "r");
     if (inputFile == NULL) {
         perror("Can not open input file\n");
         exit(1);
     }
     return inputFile;
-}
-
-void printSchoolCourses() { // todo delete
-    printf("SchoolCourses\n");
-    for (int level = 0; level < MAX_LEVELS; level++) {
-        printf("level: %d\n", level);
-        for (int courseNum = 0; courseNum < MAX_COURSES; courseNum++) {
-            struct StudentCourseNode *studentCourseNode = school.courses[level][courseNum];
-            printf("course: %d\n", courseNum);
-            while (studentCourseNode != NULL) {
-                printf("[%s %s %d] --> ", studentCourseNode->student->firstName, studentCourseNode->student->lastName,
-                       studentCourseNode->student->grades[courseNum]);
-                studentCourseNode = studentCourseNode->next;
-            }
-            printf("--|\n");
-        }
-    }
 }
 
 void addStudentToCourse(struct Student *student, int level, int course) {
@@ -233,10 +214,6 @@ int parseLine(char *line) { //TODO add input validation
 }
 
 void readFile(FILE *file) {
-//    char line[MAX_INPUT_LINE];
-//    while (fgets(line, sizeof(line), file)) {
-//        parseLine(line);
-//    }
     int encryptedLen;
     unsigned char encryptedLine[MAX_INPUT_LINE];
     unsigned char decryptedLine[MAX_INPUT_LINE];
@@ -315,7 +292,6 @@ void exportDatabase() {
 }
 
 void handleClosing() {
-//    exportDatabase();
     freeCourses();
     freeDB();
 }
@@ -541,11 +517,8 @@ enum menu_inputs {
 
 void menu() {
     char input;
-//    size_t numOfStudents = 100; //TODO
     school.name = "Rabin";
     do {
-//        clrscr();
-//        system("clear");
         printf("\n|School Manager<::>Home|\n");
         printf("--------------------------------------------------------------------------------\n");
         printf("Welcome to ( %s ) School!\nYou have inserted ( %zu ) students.\n\n", school.name,
@@ -579,7 +552,6 @@ void menu() {
                 break;
             case Showall:
                 printAllStudents();
-                printSchoolCourses();
                 break;
             case Top10:
                 printTopNStudentsPerCourse();

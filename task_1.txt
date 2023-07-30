@@ -1,0 +1,10 @@
+Part 1:
+
+Task 1:
+1. Kernel modules, also called drivers, are pieces of code that expands the kernel. 
+2. The advantage of kernel modules is their performence and that the modules can be compiled and run while the kernel is running, not need to reboot.
+   The disadvantage is that when working with the kernel, it can cause the operating system to carsh or reboot. 
+3. The relationship between the kernel and the kernel modules is that the kernel modules expands the kernel with additional code. 
+4. For examples: adding system calls, the file system and virtualization.
+
+
